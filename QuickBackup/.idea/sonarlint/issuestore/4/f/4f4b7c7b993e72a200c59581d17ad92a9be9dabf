@@ -1,0 +1,8 @@
+
+
+java:S1186"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(à–¬Ìúÿÿÿÿ
+Q	java:S125"<This block of commented-out lines of code should be removed.(µĞÍ
+N	java:S106_"9Replace this use of System.out or System.err by a logger.(£öº
+o
+java:S3012c"YUse "Arrays.copyOf", "Arrays.asList", "Collections.addAll" or "System.arraycopy" instead.(áĞñì
+S	java:S106k"9Replace this use of System.out or System.err by a logger.(ŠÊÁûùÿÿÿÿ
