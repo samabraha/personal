@@ -23,7 +23,6 @@ public class MainFrame extends JFrame {
         var topPanel = new JPanel();
         topPanel.add(logoLabel);
 
-//        filesComboBox.setSelectedIndex(0);
         addFiles(filesComboBox);
 
         var centerPanel = new JPanel();
@@ -68,7 +67,6 @@ public class MainFrame extends JFrame {
 
         pack();
     }
-
     private void buildMenuBar() {
         var menuBar = new JMenuBar();
 
@@ -92,19 +90,19 @@ public class MainFrame extends JFrame {
         String selected = (String) filesComboBox.getSelectedItem();
         ProcessBuilder builder = new ProcessBuilder();
         String[] pathArray = QuickCopy.destDirRoot.toString().split("/");
-        System.out.println("pathArray.length = " + pathArray.length);
+
         List<String> command = new ArrayList<>();
         command.add("explorer.exe");
-        for (String dirFile : pathArray) {
-            command.add(dirFile);
-        }
+
+        command.addAll(Arrays.asList(pathArray));
+
+        assert selected != null;
         if (!selected.equalsIgnoreCase("all")) {
-            String fileName = QuickCopy.getFileNameFromAlias(selected);
+            String fileName = Objects.requireNonNull(QuickCopy.getFilenameByAlias(selected));
             command.add("\\" + fileName.substring(0, fileName.length() - 4));
         }
 
         try {
-            System.out.println(Arrays.toString(command.toArray(new String[0])));
             builder.command(command.toArray(new String[0]));
             builder.start();
         } catch (IOException e) {
@@ -112,23 +110,40 @@ public class MainFrame extends JFrame {
         }
     }
 
-    private void backup(ActionEvent event) {
+
+    private void getPath(ActionEvent actionEvent) {
         String selected = (String) filesComboBox.getSelectedItem();
-        if (selected.equalsIgnoreCase("all")) {
-            for (var item : QuickCopy.filesMap.keySet()) {
-                statusText.setText(QuickCopy.getFileNameFromAlias(item));
-                QuickCopy.backup(QuickCopy.getFileNameFromAlias(item), QuickCopy.destDirRoot);
-            }
+
+        assert selected != null;
+        if (!selected.equalsIgnoreCase("all")) {
+            Utilities.copyToClipboard(getPathByAlias(selected));
         } else {
-            statusText.setText(QuickCopy.getFileNameFromAlias(selected));
-            QuickCopy.backup(QuickCopy.getFileNameFromAlias(selected), QuickCopy.destDirRoot);
+            StringBuilder paths = new StringBuilder();
+            QuickCopy.getAllAliases().forEach(x -> paths.append(getPathByAlias(x)).append(System.lineSeparator()));
+            Utilities.copyToClipboard(paths);
         }
     }
 
-
-    private void getPath(ActionEvent event) {
-
+    private String getPathByAlias(String alias) {
+        String fileName = Objects.requireNonNull(QuickCopy.getFilenameByAlias(alias));
+        fileName = fileName.substring(0, fileName.length() - 4);
+        return QuickCopy.destDirRoot.resolve(fileName).toString();
     }
+
+
+    private void backup(ActionEvent event) {
+        String selected = (String) Objects.requireNonNull(filesComboBox.getSelectedItem());
+        if (selected.equalsIgnoreCase("all")) {
+            for (var item : QuickCopy.getAllAliases()) {
+                statusText.setText(QuickCopy.getFilenameByAlias(item));
+                QuickCopy.backup(QuickCopy.getFilenameByAlias(item), QuickCopy.destDirRoot);
+            }
+        } else {
+            statusText.setText(QuickCopy.getFilenameByAlias(selected));
+            QuickCopy.backup(QuickCopy.getFilenameByAlias(selected), QuickCopy.destDirRoot);
+        }
+    }
+
 
     private void exit() {
         final String question = String.format("Are you sure you want to quit %s?", QuickCopy.APP_NAME);
@@ -143,7 +158,7 @@ public class MainFrame extends JFrame {
      * Adds backup file aliases to comboBox. */
     private void addFiles(JComboBox<String> filesComboBox) {
         filesComboBox.addItem("All");
-        for (String key : QuickCopy.filesMap.keySet()) {
+        for (String key : QuickCopy.getAllAliases()) {
             filesComboBox.addItem(key);
         }
     }

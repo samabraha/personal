@@ -1,7 +1,5 @@
 
 import javax.swing.*;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,26 +8,29 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
 
-import java.util.Map;
-
-import java.util.TimeZone;
+import java.util.*;
 
 public class QuickCopy {
     public static final String APP_NAME = "Develogica QuickCopy";
     public static final Path destDirRoot = Path.of("E:/EACG-0032");
-    static final Map<String, String> filesMap = Map.of(
+    private static final Map<String, String> filesMap = Map.of(
             "EA", "Albino-Quiosa.qpb",
-            "MB", "Muxitos-Benfica.qpb",
+            "MB", "RosaDojo-Benfica.qpb",
             "FS", "Muxitos-Rocha.qpb"
     );
 
-    static String getFileNameFromAlias(String alias) {
+    /** Returns filename form a dictionary of aliases and filenames */
+    static String getFilenameByAlias(String alias) {
         if (filesMap.containsKey(alias)) {
             return filesMap.get(alias);
         }
 
         new Message("The name \"%s\" could not found in files dictionary.%n", alias).print();
         return null;
+    }
+
+    static List<String> getAllAliases() {
+        return new ArrayList<>(filesMap.keySet());
     }
 
     public static void main(String[] args) throws UnsupportedLookAndFeelException {
@@ -51,12 +52,13 @@ public class QuickCopy {
 
         switch (command) {
             case "cp", "copy" -> runCopyCommand(arg);
-            case "gp", "getpath" -> getLatestBackupPath(arg);
+            case "gp", "getpath" -> getLatestBackupPath(arg[1]);
             default -> System.err.println("Unknown command: " + command);
         }
     }
 
     private static void runCopyCommand(String... arg) {
+        System.out.println();
         if (arg.length < 2) {
             new Message("Missing file name or alias.").print();
             return;
@@ -69,7 +71,7 @@ public class QuickCopy {
             }
             return;
         }
-        String fileName = getFileNameFromAlias(alias);
+        String fileName = getFilenameByAlias(alias);
 
         backup(fileName, destDirRoot);
     }
@@ -115,7 +117,7 @@ public class QuickCopy {
             copy(sourceFile.toPath(), destPath);
         }
 
-        copyToClipboard(destPath);
+        Utilities.copyToClipboard(destPath);
     }
 
     /** Copies a file using Files.copy() from Path a to Path b */
@@ -178,21 +180,12 @@ public class QuickCopy {
 
     /** Finds latest backup by iterating by date backwards and checks if a matching
      * file exists in backup folder.
-     * @param arg*/
-    private static Path getLatestBackupPath(String... arg) {
+     * @param fileNameOrAlias fileName or alias */
+    private static Path getLatestBackupPath(String fileNameOrAlias) {
         /* TODO */
+        getFilenameByAlias(fileNameOrAlias);
         Message.create("SORRY, THIS IS A STUB METHOD.")
                 .print();
         return null;
-    }
-
-    /** Calls toString() the Object parameter and sends the result to clipboard
-     * @param object from which a string is to be extracted  */
-    private static void copyToClipboard(Object object) {
-        var selection = new StringSelection(object.toString());
-
-        Toolkit.getDefaultToolkit()
-                .getSystemClipboard()
-                .setContents(selection, null);
     }
 }
