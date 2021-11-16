@@ -16,7 +16,9 @@ public class QuickCopy {
     private static final Map<String, String> filesMap = Map.of(
             "EA", "Albino-Quiosa.qpb",
             "MB", "RosaDojo-Benfica.qpb",
-            "FS", "Muxitos-Rocha.qpb"
+            "FS", "Muxitos-Rocha.qpb",
+            "RDA", "RosaDojo-Benfica",
+            "EA2", "EriAbraha-Benfica"
     );
 
     /** Returns filename form a dictionary of aliases and filenames */
@@ -67,12 +69,14 @@ public class QuickCopy {
 
         if (alias.equalsIgnoreCase("all")) {
             for (var element : filesMap.entrySet()) {
-                backup(element.getValue(), destDirRoot);
+                new Thread(() -> {
+                    backup(element.getValue(), destDirRoot);
+                }).start();
             }
             return;
         }
-        String fileName = getFilenameByAlias(alias);
 
+        String fileName = getFilenameByAlias(alias);
         backup(fileName, destDirRoot);
     }
 
@@ -122,13 +126,12 @@ public class QuickCopy {
 
     /** Copies a file using Files.copy() from Path a to Path b */
     private static void copy(Path from, Path to) {
-
         try {
+            new Message("Copying%n\tfrom: %s%n\tto: %s", from, to).print();
             String lastLine = "Copying in progress...";
-            new Message("Copying%n\tfrom: %s%n\tto: %s%n", from, to).print();
             Message.create(lastLine).print();
             Files.copy(from, to);
-            Message.create("Copying successfully completed.\n").printOnSameLine(lastLine.length());
+            Message.create("Copying successfully completed.").print();
         } catch (IOException ioException) {
             ioException.printStackTrace();
         }
@@ -169,7 +172,7 @@ public class QuickCopy {
         for (Path root : roots) {
             Path potentialSource = Path.of(root.toString()).resolve(fileName);
             if (potentialSource.toFile().exists()) {
-                new Message("\"%s\" found\n", potentialSource).print();
+                new Message("\"%s\" found", potentialSource).print();
                 return potentialSource.toFile();
             }
         }

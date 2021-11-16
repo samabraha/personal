@@ -26,9 +26,13 @@ public class Message {
 
     /** Prints a message without then adding a newline character */
     public void print() {
-        printStream.print(messageString);
+        printStream.println(messageString);
     }
 
+    public Message newLine() {
+        messageString.append("%n");
+        return this;
+    }
 
     public void printOnSameLine() {
         printOnSameLine(999);

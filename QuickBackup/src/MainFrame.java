@@ -71,12 +71,11 @@ public class MainFrame extends JFrame {
         var menuBar = new JMenuBar();
 
         var fileMenu = new JMenu("File");
-        var exitMItem = new JMenuItem("Exit");
-        exitMItem.addActionListener(actionEvent -> exit());
-        fileMenu.add(exitMItem);
+        buildFileMenu(fileMenu);
         menuBar.add(fileMenu);
 
         var editMenu = new JMenu("Edit");
+        buildEditMenu(editMenu);
         menuBar.add(editMenu);
 
         var helpMenu = new JMenu("Help");
@@ -85,6 +84,17 @@ public class MainFrame extends JFrame {
         setJMenuBar(menuBar);
     }
 
+    private void buildFileMenu(JMenu fileMenu) {
+        var exitMItem = new JMenuItem("Exit");
+        exitMItem.addActionListener(actionEvent -> exit());
+        fileMenu.add(exitMItem);
+    }
+
+    private void buildEditMenu(JMenu editMenu) {
+        var copyPathMItem = new JMenuItem("Copy Path");
+        copyPathMItem.addActionListener(this::getPath);
+        editMenu.add(copyPathMItem);
+    }
 
     private void openDir(ActionEvent event) {
         String selected = (String) filesComboBox.getSelectedItem();
@@ -148,7 +158,7 @@ public class MainFrame extends JFrame {
     private void exit() {
         final String question = String.format("Are you sure you want to quit %s?", QuickCopy.APP_NAME);
         int result = JOptionPane.showConfirmDialog(
-                this, question, QuickCopy.APP_NAME ,JOptionPane.YES_NO_OPTION);
+                this, question, QuickCopy.APP_NAME, JOptionPane.YES_NO_OPTION);
         if (result == JOptionPane.YES_OPTION) {
             System.exit(0);
         }
