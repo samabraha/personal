@@ -1,8 +1,0 @@
-
- 
-java:S1130
-"„Remove the declaration of thrown exception 'javax.swing.UnsupportedLookAndFeelException', as it cannot be thrown from method's body.(ðìÀ¤øÿÿÿÿ
-V	java:S125"<This block of commented-out lines of code should be removed.(Ýßùöúÿÿÿÿ
-N	java:S106"9Replace this use of System.out or System.err by a logger.(ÞÕÏ
-o
-java:S1128"TRemove this unnecessary import: same package classes are always implicitly imported.(— ìÜþÿÿÿÿ

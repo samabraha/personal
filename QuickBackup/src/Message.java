@@ -1,8 +1,7 @@
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.PrintStream;
 
 public class Message {
-    private final PrintWriter printWriter = new PrintWriter(OutputStream.nullOutputStream());
+    private static final PrintStream printStream = System.out;
     private final StringBuilder messageString;
 
     public Message() {
@@ -27,7 +26,7 @@ public class Message {
 
     /** Prints a message without then adding a newline character */
     public void print() {
-        printWriter.print(messageString);
+        printStream.print(messageString);
     }
 
 
@@ -37,6 +36,6 @@ public class Message {
 
     /** Prints message by erasing previousLineLength number of characters using \b. */
     public void printOnSameLine(int previousLineLength) {
-        printWriter.print("\b".repeat(previousLineLength) + messageString);
+        printStream.print("\b".repeat(previousLineLength) + messageString);
     }
 }
