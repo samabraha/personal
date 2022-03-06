@@ -1,18 +1,13 @@
 package com.invoprep.util;
 
-import com.invoprep.model.Invoice;
-import com.invoprep.model.PurchaseInvoice;
+
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.apache.poi.ss.usermodel.DateUtil.getJavaDate;
+import java.io.File;
+import java.io.IOException;
 
 public class ExcelUtil {
     public static void main(String[] args) throws IOException {
@@ -26,9 +21,13 @@ public class ExcelUtil {
         var wb = getWorkbook(file);
         if (wb != null) {
             var sheet = wb.getSheetAt(0);
-            System.out.println(sheet.getSheetName());
+            System.out.println("Opened " + sheet.getSheetName());
 
+            var list = getInvoiceList(sheet);
 
+            fillItems(itemsFileNamePrefix, list);
+
+            System.out.println(list);
             wb.close();
             return;
         }
@@ -36,6 +35,22 @@ public class ExcelUtil {
         System.out.println("WB was null");
     }
 
+    private static void fillItems(String itemsFileNamePrefix, List<PurchaseInvoice> invoiceList)  {
+        for (PurchaseInvoice invoice : invoiceList) {
+            Sheet sheet = getSheet(itemsFileNamePrefix + invoice.getDocumentNumber() + ".xlsx");
+            invoice.fillItems(sheet);
+        }
+    }
+
+    private static Sheet getSheet(String fileName) throws IOException {
+        try {
+            return WorkbookFactory.create(new File(fileName)).getSheetAt(0);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
 
     public static List<PurchaseInvoice> getInvoiceList(Sheet sheet) {
         var list = new ArrayList<PurchaseInvoice>();
@@ -50,33 +65,15 @@ public class ExcelUtil {
 
                 var invoice = new PurchaseInvoice(date, docNum, vendor, description, amount);
                 list.add(invoice);
-                System.out.printf("%s %s %s %s %,.2f %n", getJavaDate(date), docNum, vendor, description, amount);
+//                System.out.printf("%s %s %s %s %,.2f %n", getJavaDate(date), docNum, vendor, description, amount);
 
-            } else {
-                System.out.println("Date Doc Num  Vendor  Descr  amount");
             }
         }
-    }
-
-    public static List<PurchaseInvoice> getCompleteInvoice(Sheet invoiceList, Sheet itemList) {
-        var invoices = getInvoiceList(invoiceList);
-
-
-        return null;
-    }
-
-    public static List<PurchaseInvoice> fillItems(Sheet itemSheet) {
-
-        return fillItems(new ArrayList<PurchaseInvoice>(), itemSheet);
-    }
-
-    private static List<PurchaseInvoice> fillItems(ArrayList<PurchaseInvoice> invoices, Sheet itemSheet) {
-        return null;
+        return list;
     }
 
     public static Workbook getWorkbook(File file) {
         try {
-
             var workbook =  WorkbookFactory.create(file);
             System.out.println("Created workbook.");
             if (workbook != null) {
@@ -88,4 +85,7 @@ public class ExcelUtil {
 
         return null;
     }
+
+
+
 }
