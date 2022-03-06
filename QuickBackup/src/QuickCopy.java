@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -12,7 +11,7 @@ import java.util.*;
 
 public class QuickCopy {
     public static final String APP_NAME = "Develogica QuickCopy";
-    public static final Path destDirRoot = Path.of("E:/EACG-0032");
+    public static final Path destDirRoot = Path.of("E:/EACG-0033");
     private static final Map<String, String> filesMap = Map.of(
             "EA", "Albino-Quiosa.qpb",
             "MB", "RosaDojo-Benfica.qpb",
@@ -27,8 +26,9 @@ public class QuickCopy {
             return filesMap.get(alias);
         }
 
-        new Message("The name \"%s\" could not found in files dictionary.%n", alias).print();
-        return null;
+        new Message("The name \"%s\" could not found in files dictionary.%n", alias)
+                .print();
+        throw new IllegalArgumentException();
     }
 
     static List<String> getAllAliases() {
@@ -37,7 +37,11 @@ public class QuickCopy {
 
     public static void main(String[] args) throws UnsupportedLookAndFeelException {
 
-        new Message("Welcome to %s%n", APP_NAME).print();
+        var welcome = String.format(" Welcome to %s ", APP_NAME);
+        new Message("_".repeat(welcome.length()))
+                .newLine(welcome)
+                .newLine("=".repeat(welcome.length()))
+                .print();
 
         if (args.length > 0) {
             runCommand(args);

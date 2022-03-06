@@ -34,6 +34,11 @@ public class Message {
         return this;
     }
 
+    public Message newLine(String string) {
+        messageString.append("\n").append(string);
+        return this;
+    }
+
     public void printOnSameLine() {
         printOnSameLine(999);
     }
@@ -42,4 +47,6 @@ public class Message {
     public void printOnSameLine(int previousLineLength) {
         printStream.print("\b".repeat(previousLineLength) + messageString);
     }
+
+
 }
