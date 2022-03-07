@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 
 import static com.invoprep.model.Store.fillItems;
 
@@ -16,10 +17,10 @@ public class ExcelUtil {
     public static void main(String[] args) throws IOException {
 
 //        Store store = new Store("EA2");
+        var rootPath = Path.of("data", store.getInitials());
 
-
-        String listFileName = store.getInitials() + "/EA_COMPRASTIPODOC_All.xlsx";
-        String itemsFileNamePrefix = store.getInitials() + "/EA_A1_CF_";
+        String listFileName = rootPath + "/EA_COMPRASTIPODOC_All.xlsx";
+        String itemsFileNamePrefix = rootPath + "/EA_A1_CF_";
 
         System.out.println("Started InvoProp");
 
@@ -42,7 +43,7 @@ public class ExcelUtil {
 
         store.writeComboSheet(workbook.getSheet(sheetName), list).getHeader()
                 .setCenter(sheetName);
-        workbook.write(new FileOutputStream(store.getInitials() + "_output_file.xlsx"));
+        workbook.write(new FileOutputStream(rootPath  + "_output_file.xlsx"));
     }
 
 }
