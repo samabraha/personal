@@ -1,46 +1,20 @@
 package com.invoprep.model;
 
-public class Item {
-    private final String itemCode;
-    private final String description;
-    private final double quantity;
-    private final double unitCost;
-    private final double totalCost;
-    private final double sellingPrice;
+import org.apache.poi.ss.usermodel.Row;
 
-    public Item(String itemCode, String description, double quantity,
-                double unitCost, double totalCost, double sellingPrice) {
+/** */
+public record Item(String itemCode, String description, double quantity, double unitCost, double totalCost,
+                   double sellingPrice) {
 
-        this.itemCode = itemCode;
-        this.description = description;
-        this.quantity = quantity;
-        this.unitCost = unitCost;
-        this.totalCost = totalCost;
-        this.sellingPrice = sellingPrice;
-    }
+    public static Item getItem(Row row) {
+        var itemCode = row.getCell(0).getStringCellValue();
+        var description = row.getCell(1).getStringCellValue();
+        var quantity = row.getCell(2).getNumericCellValue();
+        var unitCost = row.getCell(3).getNumericCellValue();
+        var totalCost = row.getCell(8).getNumericCellValue();
+        var sellingPrice = row.getCell(14).getNumericCellValue();
 
-    public String getItemCode() {
-        return itemCode;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public double getQuantity() {
-        return quantity;
-    }
-
-    public double getUnitCost() {
-        return unitCost;
-    }
-
-    public double getTotalCost() {
-        return totalCost;
-    }
-
-    public double getSellingPrice() {
-        return sellingPrice;
+        return new Item(itemCode, description, quantity, unitCost, totalCost, sellingPrice);
     }
 
     @Override
@@ -51,11 +25,11 @@ public class Item {
     }
 
     public String getCodeString() {
-        return String.format("%s%04d", itemCodePrefix(), Integer.valueOf(getItemCode()));
+        return String.format("%s%04d", itemCodePrefix(), Integer.valueOf(itemCode()));
     }
 
     // TODO
     private char itemCodePrefix() {
-        return 'B';
+        return 'F';
     }
 }

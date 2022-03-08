@@ -1,9 +1,6 @@
 package com.invoprep.model;
 
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.usermodel.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,28 +8,43 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/** */
 public class Store {
     private final String storeName;
     private final String initials;
-    private String manager;
+    private final String manager;
+    private final String filePrefix;
+    private final String dataRoot;
 
-    public Store(String storeName, String initials, String manager) {
+    private final String invoiceListFileName = "_COMPRASTIPODOC_All.xlsx";
+    private String itemListFileNameInfix = "_A1_CF_";
+    private String fileSuffix = ".xlsx";
+
+    /** */
+    public Store(String storeName, String initials, String manager, String filePrefix, String dataRoot) {
         this.storeName = storeName;
         this.initials = initials;
         this.manager = manager;
+        this.filePrefix = filePrefix;
+        this.dataRoot = dataRoot;
     }
 
-    public Sheet writeComboSheet(Sheet sheet, List<PurchaseInvoice> list) {
-        Row row;
+    /** */
+    public Sheet writeComboSheet(Sheet sheet, List<PurchaseInvoice> invoiceList) {
+        Row row = sheet.createRow(sheet.getLastRowNum() + 1);
+        var columnHeadings = List.of("Ref", "Date", "Vendor", "Description",
+                "Item Code", "Item Name", "Quantity", "Unit Cost", "Total Cost", "Invoice Amount", "Selling Price", "Remark");
+        writeTableHeaders(row, columnHeadings);
 
-        for (PurchaseInvoice invoice : list) {
+        for (PurchaseInvoice invoice : invoiceList) {
             row = sheet.createRow(sheet.getLastRowNum() + 1);
 
+            row.createCell(0).setCellValue(invoice.getInvoiceRef());
             row.createCell(1).setCellValue(invoice.getDate());
             row.createCell(2).setCellValue(invoice.getVendor());
             row.createCell(3).setCellValue(invoice.getDescription());
-            row.createCell(4).setCellValue(invoice.getAmount());
-            row.createCell(5).setCellValue(invoice.getRemark());
+            row.createCell(9).setCellValue(invoice.getAmount());
+            row.createCell(11).setCellValue(invoice.getRemark());
 
             var items = invoice.getItemList();
 
@@ -41,26 +53,32 @@ public class Store {
                     row = sheet.createRow(sheet.getLastRowNum() + 1);
                 }
 
-                row.createCell(0).setCellValue(invoice.getInvoiceRef());
                 Item item = items.get(i);
 
-                row.createCell(6).setCellValue(item.getCodeString());
-                row.createCell(7).setCellValue(item.getDescription());
-                row.createCell(8).setCellValue(item.getQuantity());
-                row.createCell(9).setCellValue(item.getUnitCost());
-                row.createCell(10).setCellValue(item.getTotalCost());
-                row.createCell(11).setCellValue(item.getSellingPrice());
+                row.createCell(4).setCellValue(item.getCodeString());
+                row.createCell(5).setCellValue(item.description());
+                row.createCell(6).setCellValue(item.quantity());
+                row.createCell(7).setCellValue(item.unitCost());
+                row.createCell(8).setCellValue(item.totalCost());
+                row.createCell(10).setCellValue(item.sellingPrice());
             }
         }
 
         return sheet;
     }
 
-    static void fillItems(String itemsFileNamePrefix, List<PurchaseInvoice> invoiceList) {
-        System.out.println("Starting fill " + "-".repeat(20));
+    /** */
+    static Row writeTableHeaders(Row row, List<String> headers) {
+        for (int i = 0; i < headers.size(); i++) {
+            row.createCell(i).setCellValue(headers.get(i));
+        }
+        return row;
+    }
+
+    /** */
+    void fillItems(List<PurchaseInvoice> invoiceList) {
         for (PurchaseInvoice invoice : invoiceList) {
-            System.out.println(invoice);
-            String fileName = itemsFileNamePrefix + invoice.getDocumentNumber() + ".xlsx";
+            String fileName = getItemFileName(invoice.getDocumentNumber());
             var file = Path.of(fileName).toFile();
             if (file.exists()) {
                 Sheet sheet = getFirstSheet( getWorkbook(file));
@@ -69,9 +87,9 @@ public class Store {
         }
     }
 
+    /** */
     public static Workbook getWorkbook(File file) {
-        try {
-            var workbook =  WorkbookFactory.create(file);
+        try (var workbook =  WorkbookFactory.create(file)) {
             System.out.println("Created workbook: " + file.getName());
             if (workbook != null) {
                 return workbook;
@@ -84,38 +102,86 @@ public class Store {
         }
     }
 
+    /** */
     private static Sheet getFirstSheet(Workbook workbook) {
         return workbook.getSheetAt(0);
     }
 
+    /** */
     public List<PurchaseInvoice> getInvoiceList(Sheet sheet) {
-        var myList = new ArrayList<PurchaseInvoice>();
+        List<PurchaseInvoice> invoiceList = new ArrayList<>();
         for (Row row : sheet) {
             if (row.getRowNum() > 0) {
 
-                var date = row.getCell(0).getNumericCellValue();
+                var date = row.getCell(0).getDateCellValue();
                 var docNum = (int) row.getCell(2).getNumericCellValue();
-                var vendor = row.getCell(4).getStringCellValue();
-                var description = row.getCell(5).getStringCellValue();
+                var vendor = getCellValue(row, 4);
+                var description = getCellValue(row, 5);
                 var amount = row.getCell(6).getNumericCellValue();
 
-                var invoice = new PurchaseInvoice(date, docNum, vendor, description, amount);
-                myList.add(invoice);
-//                System.out.printf("%s %s %s %s %,.2f %n", getJavaDate(date), docNum, vendor, description, amount);
+                var invoice = new PurchaseInvoice(this, date, docNum, vendor, description, amount);
+                invoiceList.add(invoice);
             }
         }
-        return myList;
+        return invoiceList;
     }
 
+    /** */
+    public String getCellValue(Row row, int cellIndex) {
+        Cell cell = row.getCell(cellIndex);
+        String value = "";
+        if (cell == null) {
+            return value;
+        }
+
+        if (cell.getCellType() == CellType.NUMERIC) {
+            value = String.valueOf(cell.getNumericCellValue());
+        } else if (cell.getCellType() == CellType.STRING) {
+            value = cell.getStringCellValue();
+        } else {
+            System.out.println("Cell either empty or unknown cell type.");
+        }
+
+        return value;
+    }
+
+    /** */
     public String getManager() {
         return manager;
     }
 
+    /** */
     public String getInitials() {
         return initials;
     }
 
+    /** */
     public Object getStoreName() {
         return storeName;
+    }
+
+    /** */
+    public String getFilePrefix() {
+        return filePrefix.toUpperCase();
+    }
+
+    /** */
+    public String getInvoiceListFileName() {
+        return Path.of(dataRoot, getInitials(), filePrefix + invoiceListFileName).toString();
+    }
+
+    /** */
+    public String getDataRoot() {
+        return dataRoot;
+    }
+
+    /** */
+    public String getItemListFileNameInfix() {
+        return itemListFileNameInfix;
+    }
+
+    /** */
+    public String getItemFileName(int docNumber) {
+        return Path.of(getDataRoot(), getInitials(), filePrefix + getItemListFileNameInfix() + docNumber + fileSuffix).toString();
     }
 }
