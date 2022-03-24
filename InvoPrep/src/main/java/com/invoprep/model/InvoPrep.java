@@ -9,25 +9,27 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
+
 import java.util.List;
 
 /** InvoPrep launcher */
 public class InvoPrep {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args){
+        System.out.println("Starting...");
+
         String name = "Fanuel Z.";
         String dataRoot = Path.of("F:/EACG-0033/SAC").toString();
+        String mappingFilename = "VendorNameMapping";
 
         Store STORE_RDA = new Store(
-                "RosaDojo, Benfica", "RDA", name, "RS", dataRoot);
-        Store STORE_EA2 = new Store(
-                "EriAbraha-2, Benfica", "EA2", name, "EA", dataRoot);
-//
-        System.out.println("Starting...");
-        processWorkbooks(STORE_EA2);
+                "RosaDojo, Benfica", "RDA", name, "RS", dataRoot, mappingFilename);
         processWorkbooks(STORE_RDA);
+
+        Store STORE_EA2 = new Store(
+                "EriAbraha-2, Benfica", "EA2", name, "EA", dataRoot, mappingFilename);
+        processWorkbooks(STORE_EA2);
+
         System.out.println("Thank you for using InvoPrep.");
     }
 

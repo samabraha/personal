@@ -26,25 +26,23 @@ public class Store {
     private final Map<String, String> vendorAccNames;
 
     /** Returns new instance of Store */
-    public Store(String storeName, String initials, String manager, String filePrefix, String dataRoot) {
+    public Store(String storeName, String initials, String manager, String filePrefix,
+                 String dataRoot, String mappingFilename) {
         this.storeName = storeName;
         this.initials = initials;
         this.manager = manager;
         this.filePrefix = filePrefix;
         this.dataRoot = dataRoot;
 
-        vendorAccNames = getVendorNameAccMapping();
+        vendorAccNames = getVendorNameAccMapping(mappingFilename);
     }
 
 
-    private Map<String, String> getVendorNameAccMapping() {
-        String mappingFileName = Path.of(dataRoot, "mapping" + fileExt).toString();
-        Map<String, String> nameMapping = new HashMap<>();
-
-        var workbook = getWorkbook((Path.of("VendorNameMapping.xlsx").toFile()));
-
+    private Map<String, String> getVendorNameAccMapping(String filename) {
+        var workbook = getWorkbook((Path.of(dataRoot, filename + fileExt).toFile()));
         var sheet = workbook.getSheetAt(0);
 
+        Map<String, String> nameMapping = new HashMap<>();
         for (Row row : sheet) {
             var name = row.getCell(1).getStringCellValue();
             var value = row.getCell(2).getStringCellValue();
@@ -53,8 +51,6 @@ public class Store {
                 nameMapping.put(name, value);
             }
         }
-
-        sheet.getHeader();
 
         return nameMapping;
     }
