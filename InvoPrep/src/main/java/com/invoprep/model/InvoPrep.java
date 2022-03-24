@@ -1,9 +1,7 @@
 package com.invoprep.model;
 
 
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.usermodel.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,49 +9,58 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /** InvoPrep launcher */
 public class InvoPrep {
-    public static Store STORE_RDA = new Store("RosaDojo, Benfica", "RDA", "Fanuel Z.", "RS", "data");
-    public static Store STORE_EA2 = new Store("EriAbraha-2, Benfica", "EA2", "Fanuel Z.", "EA", "data");
 
-    /** */
-    public static void main(String[] args) {
-//        Store store = STORE_EA2;
-         Store store = STORE_RDA;
+    public static void main(String[] args) throws IOException {
+        String name = "Fanuel Z.";
+        String dataRoot = Path.of("F:/EACG-0033/SAC").toString();
 
-        var rootPath = Path.of(store.getDataRoot(), store.getInitials(), store.getFilePrefix());
+        Store STORE_RDA = new Store(
+                "RosaDojo, Benfica", "RDA", name, "RS", dataRoot);
+        Store STORE_EA2 = new Store(
+                "EriAbraha-2, Benfica", "EA2", name, "EA", dataRoot);
+//
+        System.out.println("Starting...");
+        processWorkbooks(STORE_EA2);
+        processWorkbooks(STORE_RDA);
+        System.out.println("Thank you for using InvoPrep.");
+    }
 
-        System.out.println("Started InvoPrep with " + store.getStoreName());
+    private static void processWorkbooks(Store store) {
+        var rootPath = Path.of(store.getStoreDirectory());
 
-        var file = new File(store.getInvoiceListFileName());
+        System.out.println("Processing " + store.getStoreName() + " files.");
 
+        var file = new File(store.getInvoiceListFilename());
         Sheet sheet;
 
-        List<PurchaseInvoice> invoiceList;
         try (var workbook = Store.getWorkbook(file)) {
             if (workbook.getNumberOfSheets() == 0) {
                 System.out.println("Workbook does not have any sheets.");
             }
 
             sheet = workbook.getSheetAt(0);
-            System.out.println("Opened " + sheet.getSheetName());
-            invoiceList = store.getInvoiceList(sheet);
-            store.fillItems(invoiceList);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException ioException) {
+            throw new RuntimeException(ioException);
         }
 
+        List<PurchaseInvoice> invoiceList = store.getInvoiceList(sheet);
+        System.out.printf("Processing %d invoices.%n", invoiceList.size());
+        store.fillItems(invoiceList);
+        System.out.println("Done");
         Workbook workbook;
-        Path outputPath = Path.of(rootPath + "_output_file.xlsx");
+
 //        File outFile = outputPath.toFile();
         try {
 //            if (outFile.exists() && outFile.length() > 0) {
 //                workbook = WorkbookFactory.create(outFile);
 //            } else {
-                workbook = WorkbookFactory.create(true);
+            workbook = WorkbookFactory.create(true);
 //            }
         } catch (IOException ioException) {
             ioException.printStackTrace();
@@ -61,7 +68,6 @@ public class InvoPrep {
         }
 
         var sheetName = store.getInitials() + "_ItemInvoices";
-
 
         Sheet outSheet = workbook.getSheet(sheetName);
         if (outSheet == null) {
@@ -72,13 +78,18 @@ public class InvoPrep {
         sheet.getHeader().setCenter(sheetName);
         sheet.getHeader().setRight(LocalDate.now().toString());
 
-        try (workbook; var fos = new FileOutputStream("new_file")) {
+        String tmpFileName = "new_file";
+        try (workbook; var fos = new FileOutputStream(tmpFileName)) {
             workbook.write(fos);
 
+            var outputFilename = "%s_%s_%s.xlsx".formatted(store.getFilePrefix(), "CPL", LocalDate.now());
+            Path outputPath = Path.of(rootPath.toString(), outputFilename);
             if (outputPath.toFile().exists()) {
                 Files.delete(outputPath);
             }
-            Files.move(Path.of("new_file"), outputPath);
+
+            fos.close();
+            Files.move(Path.of(tmpFileName), outputPath);
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
         }
